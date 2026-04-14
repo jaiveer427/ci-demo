@@ -38,12 +38,22 @@ jobs:
         run: |
           docker build -t springboot-app .
 
-      - name: Tag Docker Image
+      - name: Tag latest Docker Image
         run: |
           docker tag springboot-app:latest \
           ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
 
-      - name: Push Docker Image
+      - name: Tag Docker Image with Sha
+        run: |
+          docker tag springboot-app:latest \
+          ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+      - name: Push latest Docker Image
         run: |
           docker push \
           ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+
+      - name: Push Sha Image
+        run: |
+          docker push \
+          ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}  
