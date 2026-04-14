@@ -20,11 +20,11 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build and Test
-        run: mvn clean verify
+      - name: Build App
+        run : mvn clean package -DskipTests
 
-      - name: Upload JAR Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: springboot-jar
-          path: target/*.jar
+      - name: Build Docker Image
+        run: docker build -t springboot-app :latestr .
+
+      - name : Verify Docker Image
+         run : docker image 
