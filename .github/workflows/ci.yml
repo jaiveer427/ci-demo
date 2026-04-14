@@ -1,4 +1,4 @@
-name: Spring Boot CI + Docker
+name: Build and Push Docker to ECR
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +20,30 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build App
+      - name: Build Spring Boot JAR
         run: mvn clean package -DskipTests
 
-      - name: Build Docker Image
-        run: docker build -t springboot-app:latest .
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.ACCESSKEY }}
+          aws-secret-access-key: ${{ secrets.SECRETACCESSKEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Verify Docker Image
-        run: docker images
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build Docker Image
+        run: |
+          docker build -t springboot-app .
+
+      - name: Tag Docker Image
+        run: |
+          docker tag springboot-app:latest \
+          ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+
+      - name: Push Docker Image
+        run: |
+          docker push \
+          ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
